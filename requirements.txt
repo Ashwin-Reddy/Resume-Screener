@@ -1,0 +1,12 @@
+# Resume-Screener runtime dependencies
+# Python: 3.10+ (recommended: 3.12)
+
+# PDF text extraction (imported as `fitz`)
+PyMuPDF>=1.24,<2.0
+
+# Numeric utilities used for similarity selection and vector operations
+numpy>=1.26,<3.0
+
+# Embedding model + semantic similarity utilities
+# Note: this pulls required NLP backend packages (e.g., transformers, torch).
+sentence-transformers>=3.0,<6.0
