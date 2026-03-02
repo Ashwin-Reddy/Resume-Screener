@@ -25,5 +25,6 @@ env/
 
 # Local data
 *.log
+
 # Ignore PDF documents
 *.pdf
