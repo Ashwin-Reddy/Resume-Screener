@@ -1,5 +1,6 @@
 import fitz  # PyMuPDF
 import re
+from datetime import datetime
 
 # semantic embeddings
 import numpy as np
@@ -190,6 +191,62 @@ def extract_section(text, headers):
     return section_lines
 
 
+def normalize_duration(duration_text: str) -> str:
+    """Normalize various duration formats to a consistent years/months string.
+
+    Rules:
+    1. If the text already contains a phrase like "6 years" or "6 yrs",
+       return the matched portion unchanged.
+    2. If it is a date range ("Nov 2019 – Present" or "Jan 2020 - March 2023"),
+       compute the difference from start to end (or current date for Present)
+       and express it as "X years" or "X years Y months".
+    3. On failure to parse, return the original *duration_text*.
+
+    Supports full and abbreviated month names and both dash types.
+    """
+    text = duration_text.strip()
+    # 1. direct years expression
+    years_match = re.search(r"(\d+)\s*(?:years?|yrs?)", text, re.I)
+    if years_match:
+        return years_match.group(0)
+
+    # helper to parse a month-year string
+    def parse_month_year(s: str):
+        s = s.strip().replace(',', '')
+        for fmt in ("%B %Y", "%b %Y", "%Y"):  # allow bare year as fallback
+            try:
+                return datetime.strptime(s, fmt)
+            except ValueError:
+                continue
+        return None
+
+    # split on dash or en-dash
+    parts = re.split(r"\s*[–-]\s*", text)
+    if len(parts) == 2:
+        start_str, end_str = parts
+        start_dt = parse_month_year(start_str)
+        end_str = end_str.strip()
+        if re.search(r"present", end_str, re.I):
+            end_dt = datetime.today()
+        else:
+            end_dt = parse_month_year(end_str)
+        if start_dt and end_dt:
+            # compute total months difference
+            total_months = (end_dt.year - start_dt.year) * 12 + (end_dt.month - start_dt.month)
+            if total_months < 0:
+                return text  # invalid range
+            years = total_months // 12
+            months = total_months % 12
+            if years > 0 and months > 0:
+                return f"{years} years {months} months"
+            elif years > 0:
+                return f"{years} years"
+            else:
+                return f"{months} months"
+    # couldn't parse, return original
+    return text
+
+
 def extract_experience_from_resume(text):
     """
     Extract structured experience entries with Role, Organization, and Duration.
@@ -231,7 +288,8 @@ def extract_experience_from_resume(text):
         if org_duration_match:
             # Found organization and duration
             current_org = org_duration_match.group(1).strip()
-            current_duration = org_duration_match.group(2).strip()
+            raw_duration = org_duration_match.group(2).strip()
+            current_duration = normalize_duration(raw_duration)
             i += 1
             continue
         
