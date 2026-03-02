@@ -222,7 +222,7 @@ def compute_skill_match(resume_skills_dict, job_skills_dict):
 
 # --- main script -------------------------------------------------------------
 
-resume_text = extract_text_from_pdf("resume.pdf")
+resume_text = extract_text_from_pdf("/home/ashwin/Documents/My Programming/Projects/resume.pdf")
 resume_skills_dict = extract_skills_from_resume(resume_text)
 print("Resume Skills:", resume_skills_dict)
 
