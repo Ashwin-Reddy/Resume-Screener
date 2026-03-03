@@ -392,21 +392,94 @@ def extract_skills_from_job(text):
 
 
 
-def compute_skill_match(resume_skills_dict, job_skills_dict):
-    """Backward-compatible helper that only considers the explicit skills dict.
+def extract_required_experience(job_text: str):
+    """Extract the minimum years requirement from job description.
+
+    Supports various formats:
+    - "3 years experience"
+    - "3+ years"
+    - "3-5 years"
+    - "at least 3 years"
+    - "minimum three years"
+
+    Returns the minimum required years as int, or None if not found.
     """
-    # delegate to new function with empty extras
-    return compute_match(resume_skills_dict, {}, {}, job_skills_dict)
+    # word to number mapping
+    word_to_num = {
+        "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4,
+        "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
+        "ten": 10, "eleven": 11, "twelve": 12, "fifteen": 15,
+        "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50
+    }
+
+    text = job_text.lower()
+
+    # Pattern 1: digit-based (3 years, 3+ years, 3-5 years, etc.)
+    # Match patterns like: "3 years", "3+ years", "3-5 years", "minimum 3 years"
+    pattern1 = r"(?:minimum|at least|required|minimum of)?\s*(\d+)\s*(?:\+|-\d+)?\s*(?:years?|yrs?)"
+    match = re.search(pattern1, text, re.I)
+    if match:
+        return int(match.group(1))
+
+    # Pattern 2: word-based (three years, five years, etc.)
+    word_pattern = "|".join(word_to_num.keys())
+    pattern2 = r"(?:minimum|at least|required|minimum of)?\s*(" + word_pattern + r")\s*(?:years?|yrs?)"
+    match = re.search(pattern2, text, re.I)
+    if match:
+        word = match.group(1).lower()
+        return word_to_num.get(word, None)
+
+    return None
 
 
-def compute_match(resume_skills_dict, resume_experience_dict, resume_projects_dict, job_skills_dict):
-    """Compute match between resume (skills/experience/projects) and job skills.
+def compute_total_resume_experience(resume_experience_dict: dict) -> float:
+    """Compute total experience from all resume entries in years (as float).
+
+    Parses normalized duration strings like "4 years" or "2 years 3 months"
+    and sums them up.
+
+    Returns total experience as float (e.g., 4.25 for 4 years 3 months).
+    """
+    total_months = 0
+
+    for exp in resume_experience_dict.get("Experience", []):
+        duration_str = exp.get("Duration", "").lower()
+        if not duration_str:
+            continue
+
+        # Parse "X years Y months" or "X years" or "Y months"
+        years_match = re.search(r"(\d+)\s*years?", duration_str)
+        months_match = re.search(r"(\d+)\s*months?", duration_str)
+
+        years = int(years_match.group(1)) if years_match else 0
+        months = int(months_match.group(1)) if months_match else 0
+
+        total_months += years * 12 + months
+
+    # Convert to years as float
+    total_years = total_months / 12.0
+    return total_years
+
+
+def compute_match(resume_skills_dict, resume_experience_dict, resume_projects_dict, job_skills_dict, job_description=""):
+    """Compute match between resume (skills/experience/projects) and job description.
 
     This function aggregates all resume information into a single set of
-    lowercase tokens.  Experience roles/organizations and project technologies
+    lowercase tokens. Experience roles/organizations and project technologies
     are included so that job requirements can be satisfied by those fields as
-    well.  The job description is expected to have already been parsed into a
+    well. The job description is expected to have already been parsed into a
     skills dictionary.
+
+    If the job description contains an experience requirement:
+    - If resume experience >= required experience: no penalty
+    - If resume experience < required experience: score is reduced proportionally
+
+    Args:
+        resume_skills_dict: Dict with skill categories as keys
+        resume_experience_dict: Dict with "Experience" list
+        resume_projects_dict: Dict with "Projects" list
+        job_skills_dict: Dict with required skill categories as keys
+        job_description: Raw job description text (optional)
 
     Returns a tuple ``(score, matched_skills_dict, missing_skills_dict)``.
     """
@@ -452,6 +525,20 @@ def compute_match(resume_skills_dict, resume_experience_dict, resume_projects_di
         if missing_in_category:
             missing_skills_dict[category] = missing_in_category
 
+    # Apply experience weighting if job description contains experience requirement
+    if job_description:
+        try:
+            required_exp = extract_required_experience(job_description)
+            if required_exp is not None:
+                resume_exp = compute_total_resume_experience(resume_experience_dict)
+                if resume_exp < required_exp:
+                    # Apply penalty proportionally
+                    experience_ratio = resume_exp / required_exp
+                    score = score * experience_ratio
+        except Exception:
+            # Safely ignore any errors during experience extraction
+            pass
+
     return score, matched_skills_dict, missing_skills_dict
 
 
@@ -470,7 +557,7 @@ print("Resume Experience:", resume_experience_dict)
 print("Resume Projects:", resume_projects_dict)
 
 job_description = """
-Looking for a backend developer with Java, C++, JavaScript, FastAPI,
+Looking for a backend developer with 3+ years of experience in Java, C++, JavaScript, FastAPI,
 REST APIs, PostgreSQL, AWS, and cloud deployment experience.
 
 """
@@ -482,9 +569,24 @@ match_score, matched_skills_dict, missing_skills_dict = compute_match(
     resume_skills_dict,
     resume_experience_dict,
     resume_projects_dict,
-    job_skills_dict
+    job_skills_dict,
+    job_description  # Pass job description for experience-based weighting
 )
-print(f"Overall Match Score: {match_score:.2f}%")
-print("Matched Skills:", matched_skills_dict)
-print("Missing Job Skills:", missing_skills_dict)
 
+# Additional diagnostics
+required_exp = extract_required_experience(job_description)
+resume_exp = compute_total_resume_experience(resume_experience_dict)
+print(f"Resume Total Experience: {resume_exp:.2f} years")
+if required_exp is not None:
+    print(f"Job Required Experience: {required_exp} years")
+    if resume_exp >= required_exp:
+        print("✓ Experience requirement met (no penalty applied)")
+    else:
+        penalty = (1 - (resume_exp / required_exp)) * 100
+        print(f"✗ Experience shortfall: {required_exp - resume_exp:.2f} years (-{penalty:.1f}% penalty)")
+else:
+    print("No specific experience requirement found in job description")
+
+print(f"\n Overall Match Score: {match_score:.2f}%")
+print("\n Matched Skills:", matched_skills_dict)
+print("\n Missing Job Skills:", missing_skills_dict)
