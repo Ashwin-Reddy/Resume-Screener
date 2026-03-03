@@ -2,9 +2,13 @@ import fitz  # PyMuPDF
 import re
 from datetime import datetime
 
+# Gemini
+from google import genai
+
 # semantic embeddings
 import numpy as np
 from sentence_transformers import SentenceTransformer, util
+import os
 
 # load model once
 document_model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -543,6 +547,108 @@ def compute_match(resume_skills_dict, resume_experience_dict, resume_projects_di
 
 
 
+# --- LLM explanation helper --------------------------------------------------
+def generate_llm_explanation(
+    match_score,
+    matched_skills_dict,
+    missing_skills_dict,
+    resume_experience_dict,
+):
+    """Generate a professional recruiter-style paragraph summarizing fit.
+
+    Uses the `google.generativeai` package with model `gemini-1.5-flash` when an
+    API key is available via the `GEMINI_API_KEY` environment variable. If the
+    key or package is not available the function returns a concise local
+    fallback summary. The returned value is the plain explanation text.
+    """
+
+    def _flatten_skill_dict(d, limit=6):
+        items = []
+        for cat, skills in (d or {}).items():
+            for s in skills:
+                if s and s not in items:
+                    items.append(s)
+                if len(items) >= limit:
+                    break
+            if len(items) >= limit:
+                break
+        return items
+
+    matched_list = _flatten_skill_dict(matched_skills_dict, limit=6)
+    missing_list = _flatten_skill_dict(missing_skills_dict, limit=6)
+
+    # Experience summary: extract roles and compute total years
+    roles = [exp.get("Role") for exp in resume_experience_dict.get("Experience", []) if exp.get("Role")]
+    roles_text = ", ".join(roles[:3]) if roles else ""
+    total_years = compute_total_resume_experience(resume_experience_dict)
+
+    matched_str = ", ".join(matched_list) if matched_list else "no notable skills"
+    missing_str = ", ".join(missing_list) if missing_list else "no critical missing skills"
+
+    # concise prompt for the model
+    prompt = (
+        f"You are a professional tech recruiter. Given the following candidate-job match data,"
+        f" write one natural paragraph (120-150 words) summarizing the candidate's fit, strengths, gaps," 
+        f" and a short recommendation. Do not use bullet points or JSON.\n\n"
+        f"Match score: {match_score:.1f}%\n"
+        f"Matched skills: {matched_str}\n"
+        f"Missing skills: {missing_str}\n"
+        f"Experience summary: {roles_text or 'roles unavailable'}; total experience {total_years:.1f} years.\n\n"
+        f"Output: a single professional recruiter-style paragraph (no bullets, no JSON)."
+    )
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return "GEMINI_API_KEY not set; cannot call Gemini. Please set GEMINI_API_KEY in the environment to enable LLM explanations."
+
+    try:
+        client = genai.Client(api_key=api_key)
+    except Exception as e:
+        return f"Failed to initialize Gemini client: {e}"
+
+    try:
+        resp = client.models.generate_content(
+            model="gemini-3-flash-preview",
+            contents=prompt,
+        )
+
+        # Robustly extract text from a few possible response shapes
+        text = None
+        # Pattern 1: resp.outputs or resp.output (list of blocks)
+        out = getattr(resp, "outputs", None) or getattr(resp, "output", None)
+        if out:
+            try:
+                # outputs may be list-like of dicts
+                first = out[0]
+                if isinstance(first, dict):
+                    # content may be nested
+                    content = first.get("content") or first.get("text")
+                    if isinstance(content, list) and content:
+                        c0 = content[0]
+                        if isinstance(c0, dict) and "text" in c0:
+                            text = c0["text"]
+                        elif isinstance(c0, str):
+                            text = c0
+                    elif isinstance(content, str):
+                        text = content
+                else:
+                    text = str(first)
+            except Exception:
+                text = None
+
+        # Pattern 2: resp.text or resp.output_text
+        if not text:
+            text = getattr(resp, "text", None) or getattr(resp, "output_text", None)
+
+        # Final fallback: stringify the response
+        if not text:
+            text = str(resp)
+
+        return text.strip()
+    except Exception as e:
+        return f"Gemini API call failed: {e}"
+
+
 # --- main script -------------------------------------------------------------
 
 resume_text = extract_text_from_pdf("resume.pdf")
@@ -590,3 +696,15 @@ else:
 print(f"\n Overall Match Score: {match_score:.2f}%")
 print("\n Matched Skills:", matched_skills_dict)
 print("\n Missing Job Skills:", missing_skills_dict)
+
+# Generate and print a human-readable explanation using the LLM helper
+try:
+    explanation = generate_llm_explanation(
+        match_score,
+        matched_skills_dict,
+        missing_skills_dict,
+        resume_experience_dict,
+    )
+    print("\nLLM Explanation:\n", explanation)
+except Exception as e:
+    print(f"Failed to generate LLM explanation: {e}")
