@@ -54,7 +54,7 @@ def on_startup() -> None:
     constructed and the skill embeddings are computed once when the app starts.
     """
     # explicit import to trigger module initialization
-    import utils.skill_dictionary  # noqa: F401
+    from backend.utils import skill_dictionary  # noqa: F401
 
 
 @app.get("/", response_model=schemas.MessageResponse)
@@ -103,7 +103,9 @@ async def analyze_resume(
             job_description,
         )
 
-        resume_exp_years = resume_parser.compute_total_resume_experience(resume_experience)
+        resume_exp_years = round(
+            resume_parser.compute_total_resume_experience(resume_experience), 2
+        )
 
         explanation = llm_explainer.generate_llm_explanation(
             match_score,
