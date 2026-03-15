@@ -103,10 +103,6 @@ async def analyze_resume(
             job_description,
         )
 
-        resume_exp_years = round(
-            resume_parser.compute_total_resume_experience(resume_experience), 2
-        )
-
         explanation = llm_explainer.generate_llm_explanation(
             match_score,
             matched_skills,
@@ -116,9 +112,7 @@ async def analyze_resume(
 
         return schemas.AnalyzeResumeResponse(
             match_score=match_score,
-            matched_skills=matched_skills,
             missing_skills=missing_skills,
-            resume_experience_years=resume_exp_years,
             explanation=explanation,
         )
     except Exception as exc:  # pylint: disable=broad-except

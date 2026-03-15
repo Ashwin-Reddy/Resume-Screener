@@ -9,7 +9,5 @@ class MessageResponse(BaseModel):
 
 class AnalyzeResumeResponse(BaseModel):
     match_score: float
-    matched_skills: Dict[str, List[str]]
     missing_skills: Dict[str, List[str]]
-    resume_experience_years: float
     explanation: str

@@ -22,7 +22,6 @@ def generate_llm_explanation(
     If the GEMINI_API_KEY is missing or the API call fails the function will
     return an informative error string rather than raising.
     """
-    matched_list = flatten_skill_dict(matched_skills_dict, limit=settings.max_skills_for_explanation)
     missing_list = flatten_skill_dict(missing_skills_dict, limit=settings.max_skills_for_explanation)
 
     roles = [
@@ -31,12 +30,7 @@ def generate_llm_explanation(
         if exp.get("Role")
     ]
     roles_text = ", ".join(roles[:3]) if roles else "roles unavailable"
-    total_years = 0.0
-    from backend.services.resume_parser import compute_total_resume_experience
 
-    total_years = compute_total_resume_experience(resume_experience_dict)
-
-    matched_str = ", ".join(matched_list) if matched_list else "no notable skills"
     missing_str = (
         ", ".join(missing_list) if missing_list else "no critical missing skills"
     )
@@ -47,9 +41,8 @@ def generate_llm_explanation(
         f"candidate's fit, strengths, gaps, and a short recommendation. "
         f"Do not use bullet points or JSON.\n\n"
         f"Match score: {match_score:.1f}%\n"
-        f"Matched skills: {matched_str}\n"
         f"Missing skills: {missing_str}\n"
-        f"Experience summary: {roles_text}; total experience {total_years:.1f} years.\n\n"
+        f"Experience summary: {roles_text}.\n\n"
         f"Output: a single professional recruiter-style paragraph "
         f"(no bullets, no JSON)."
     )
