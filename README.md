@@ -6,7 +6,7 @@
 [![Vite](https://img.shields.io/badge/Vite-7.3+-646cff.svg)](https://vitejs.dev/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An intelligent resume screening application that leverages AI to analyze candidate resumes against job descriptions, providing detailed match scores, skill gap analysis, and AI-generated explanations to streamline the recruitment process.
+An AI-powered resume screening system that analyzes candidate resumes against job descriptions using semantic skill matching and large language models, generating compatibility scores, skill gap analysis, and recruiter-style explanations.
 
 ## 🚀 Features
 
@@ -38,7 +38,7 @@ The application follows a microservices architecture with clear separation of co
 - **Pydantic** - Data validation and settings
 
 ### Frontend
-- **React 19** - Modern JavaScript library
+- **React 18+** - Modern JavaScript library
 - **Vite** - Fast build tool and development server
 - **Tailwind CSS** - Utility-first CSS framework
 - **Axios** - HTTP client for API communication
@@ -54,7 +54,7 @@ The application follows a microservices architecture with clear separation of co
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/resume-screener.git
+git clone https://github.com/Ashwin-Reddy/resume-screener.git
 cd resume-screener
 ```
 
@@ -142,23 +142,6 @@ Analyze a resume against a job description.
 }
 ```
 
-## 🤝 Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-- Follow PEP 8 for Python code
-- Use ESLint configuration for JavaScript/React
-- Write clear, concise commit messages
-- Add tests for new features
-- Update documentation as needed
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -180,5 +163,4 @@ If you encounter any issues or have questions:
 
 ---
 
-**Made with ❤️ for efficient recruitment processes**</content>
-<parameter name="filePath">/home/ashwin/Documents/My Programming/Projects/Resume-Screener/README.md
+**Built with ❤️ using FastAPI and React**</content>
