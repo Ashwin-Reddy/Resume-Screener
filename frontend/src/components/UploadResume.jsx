@@ -34,13 +34,13 @@ const UploadResume = ({ file, setFile }) => {
 
   return (
     <div
-      className="bg-box-primary rounded-3xl p-12 text-center cursor-pointer hover:shadow-xl transition-shadow min-h-64 flex flex-col items-center justify-center"
+      className="bg-box-primary rounded-[32px] p-6 text-center cursor-pointer flex flex-col items-center justify-center h-full"
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onClick={handleClick}
     >
       <button
-        className="bg-btn-primary text-white px-8 py-3 rounded-full font-inter font-bold text-lg mb-4 hover:bg-opacity-90 transition-all btn-text"
+        className="bg-btn-primary text-white px-8 py-3 rounded-full font-inter font-bold text-[18px] mb-3 hover:bg-opacity-90 transition-all btn-text"
         onClick={(e) => {
           e.stopPropagation();
           handleClick();
@@ -50,12 +50,12 @@ const UploadResume = ({ file, setFile }) => {
       </button>
 
       {file && (
-        <div className="mb-4 text-center">
+        <div className="mb-2 text-center">
           <p className="text-white text-sm font-semibold">✓ {file.name}</p>
         </div>
       )}
 
-      <p className="text-white text-base">
+      <p className="text-white text-[15px] opacity-90 font-inter">
         or Drop PDF files Here
       </p>
 

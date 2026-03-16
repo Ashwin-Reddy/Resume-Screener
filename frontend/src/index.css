@@ -1,13 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #F3F4F4;
+  --color-box-primary: #1D546D;
+  --color-btn-primary: #061E29;
+  --font-archivo: "Archivo Black", sans-serif;
+  --font-inter: "Inter", sans-serif;
+}
 
 * {
     font-family: 'Inter', sans-serif;
 }
 
 body {
-    background-color: #F3F4F4;
+    background-color: var(--color-bg-primary);
 }
 
 .heading-main {

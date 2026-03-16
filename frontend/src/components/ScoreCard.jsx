@@ -1,47 +1,37 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 const ScoreCard = ({ score }) => {
-    const getScoreColor = () => {
-        if (score < 40) return '#EF4444'; // red
-        if (score < 70) return '#FBBF24'; // yellow
-        return '#10B981'; // green
-    };
-
-    const getScoreGradient = () => {
-        if (score < 40) return '#DC2626'; // darker red for background
-        if (score < 70) return '#F59E0B'; // darker yellow for background
-        return '#059669'; // darker green for background
-    };
-
+    const displayScoreNum = score !== undefined && score !== null ? Number(score) : 0;
+    const displayScoreStr = displayScoreNum.toFixed(1);
+    
     const data = [
-        { name: 'score', value: score },
-        { name: 'remaining', value: 100 - score },
+        { name: 'score', value: displayScoreNum },
+        { name: 'remaining', value: 100 - displayScoreNum },
     ];
 
     return (
-        <div className="bg-box-primary rounded-3xl p-8 flex flex-col items-center justify-center min-h-48">
-            <p className="heading-section text-white mb-6">Score</p>
-            <div className="w-40 h-40 flex items-center justify-center">
+        <div className="bg-box-primary rounded-[32px] p-4 flex flex-col items-center justify-center h-full">
+            <div className="w-[100px] h-[100px] relative flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
                             data={data}
                             cx="50%"
                             cy="50%"
-                            innerRadius={50}
-                            outerRadius={70}
+                            innerRadius={35}
+                            outerRadius={45}
                             startAngle={90}
                             endAngle={-270}
                             dataKey="value"
                             stroke="none"
                         >
-                            <Cell fill={getScoreColor()} />
-                            <Cell fill="rgba(255, 255, 255, 0.1)" />
+                            <Cell fill="#FF0000" />
+                            <Cell fill="#D1D5DB" />
                         </Pie>
                     </PieChart>
                 </ResponsiveContainer>
-                <div className="absolute text-center">
-                    <p className="text-white text-4xl font-bold">{score}%</p>
+                <div className="absolute text-center flex items-center justify-center inset-0">
+                    <p className="text-white text-[16px] font-inter">{displayScoreStr}%</p>
                 </div>
             </div>
         </div>
