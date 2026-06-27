@@ -8,6 +8,17 @@
 
 An AI-powered resume screening system that analyzes candidate resumes against job descriptions using semantic skill matching and large language models, generating compatibility scores, skill gap analysis, and recruiter-style explanations.
 
+## 📸 Application Preview
+
+### Home Screen
+![Home Screen](assets/screenshots/home.png)
+
+### Resume Analysis (40% Match)
+![40 Percent Match](assets/screenshots/analysis-40.png)
+
+### Resume Analysis (80% Match)
+![80 Percent Match](assets/screenshots/analysis-80.png)
+
 ## 🚀 Features
 
 - **PDF Resume Parsing**: Extract text, skills, experience, and projects from PDF resumes
