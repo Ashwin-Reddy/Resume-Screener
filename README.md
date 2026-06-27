@@ -11,13 +11,14 @@ An AI-powered resume screening system that analyzes candidate resumes against jo
 ## 📸 Application Preview
 
 ### Home Screen
+
 ![Home Screen](assets/screenshots/home.png)
 
-### Resume Analysis (40% Match)
-![40 Percent Match](assets/screenshots/analysis-40.png)
+### Analysis Results
 
-### Resume Analysis (80% Match)
-![80 Percent Match](assets/screenshots/analysis-80.png)
+| 40% Match | 80% Match |
+|------------|------------|
+| ![](assets/screenshots/analysis-40.png) | ![](assets/screenshots/analysis-80.png) |
 
 ## 🚀 Features
 
@@ -31,7 +32,7 @@ An AI-powered resume screening system that analyzes candidate resumes against jo
 
 ## 🏗️ Architecture
 
-The application follows a microservices architecture with clear separation of concerns:
+The application follows a modular architecture with a clear separation of concerns:
 
 - **Backend (Python/FastAPI)**: Handles PDF processing, AI analysis, and API endpoints
 - **Frontend (React/Vite)**: Provides an intuitive user interface for resume uploads and results visualization
